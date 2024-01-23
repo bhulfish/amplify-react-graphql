@@ -31,31 +31,16 @@ const App = ({ signOut }) => {
   async function fetchNotes() {
     const apiData = await client.graphql({ query: listNotes });
     const notesFromAPI = apiData.data.listNotes.items;
-    await Promise.all(
-      notesFromAPI.map(async (note) => {
-        if (note.image) {
-          const url = await getUrl({ key: note.name });
-          note.image = url.url;  
-        }
-        return note;
-      })
-    );
     setNotes(notesFromAPI);
   }
 
   async function createNote(event) {
     event.preventDefault();
     const form = new FormData(event.target);
-    const image = form.get("image");
     const data = {
       name: form.get("name"),
       description: form.get("description"),
-      image: image.name,
     };
-    if (!!data.image) await uploadData({
-      key: data.name,
-      data: image
-    });
     await client.graphql({
       query: createNoteMutation,
       variables: { input: data },
@@ -95,12 +80,6 @@ const App = ({ signOut }) => {
             variation="quiet"
             required
           />
-          <View
-            name="image"
-            as="input"
-            type="file"
-            style={{ alignSelf: "end" }}
-          />
           <Button type="submit" variation="primary">
             Create Note
           </Button>
@@ -119,13 +98,6 @@ const App = ({ signOut }) => {
               {note.name}
             </Text>
             <Text as="span">{note.description}</Text>
-            {note.image && (
-              <Image
-                src={note.image}
-                alt={`visual aid for ${notes.name}`}
-                style={{ width: 400 }}
-              />
-            )}
             <Button variation="link" onClick={() => deleteNote(note)}>
               Delete note
             </Button>
